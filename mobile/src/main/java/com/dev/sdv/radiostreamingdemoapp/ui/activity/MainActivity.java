@@ -1,19 +1,29 @@
 package com.dev.sdv.radiostreamingdemoapp.ui.activity;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.BottomSheetBehavior;
 import android.util.Log;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
+import com.dev.sdv.radiostreamingdemoapp.media.service.MediaService;
 import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
 import com.dev.sdv.radiostreamingdemoapp.ui.view.MiniPlayer;
+import com.dev.sdv.radiostreamingdemoapp.utils.SystemUtils;
 
 public class MainActivity extends BaseActivity implements MiniPlayer.ControlListener {
 
   private BottomSheetBehavior behavior;
   private MiniPlayer miniPlayer;
+  private MediaService.MediaServiceBinder mediaServiceBinder;
+  private MediaService mediaService;
+  private boolean mediaServiceBound;
 
   // Lifecycle methods
 
@@ -28,6 +38,8 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
 
   @Override protected void onResume() {
     super.onResume();
+    // Verify if permissions are needed
+    bindMediaService();
   }
 
   @Override protected void onPause() {
@@ -40,6 +52,7 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
 
   @Override protected void onDestroy() {
     super.onDestroy();
+    stopMediaService();
   }
 
   // Override methods
@@ -95,6 +108,12 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     }
   }
 
+  private void bindMediaService(){
+    Intent intent = new Intent(this, MediaService.class);
+    bindService(intent, mediaServiceConnection, Context.BIND_AUTO_CREATE);
+    startService(intent);
+  }
+
   /**
    * Configures the mini player
    */
@@ -119,4 +138,32 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     }
     return false;
   }
+
+  private void stopMediaService(){
+    if(SystemUtils.isServiceRunning(MediaService.class, this)){
+      Intent intent = new Intent(this, MediaService.class);
+      stopService(intent);
+      if (mediaServiceBound) {
+        unbindService(mediaServiceConnection);
+        mediaServiceBound = false;
+      }
+    }
+  }
+
+  // Media Service Binding
+
+  private ServiceConnection mediaServiceConnection = new ServiceConnection() {
+    @Override public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+      mediaServiceBinder = (MediaService.MediaServiceBinder) iBinder;
+      mediaService = mediaServiceBinder.getService();
+      mediaServiceBound = true;
+    }
+
+    @Override public void onServiceDisconnected(ComponentName componentName) {
+      if(mediaServiceBound){
+        mediaServiceBound = false;
+        stopMediaService();
+      }
+    }
+  };
 }
