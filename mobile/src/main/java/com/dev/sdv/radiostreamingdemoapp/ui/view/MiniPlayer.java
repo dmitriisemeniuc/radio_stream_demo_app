@@ -1,16 +1,14 @@
 package com.dev.sdv.radiostreamingdemoapp.ui.view;
 
-import android.media.session.PlaybackState;
-import android.support.design.widget.BottomSheetBehavior;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.dev.sdv.radiostreamingdemoapp.R;
 import com.dev.sdv.radiostreamingdemoapp.helper.PlaybackButtonHelper;
-import com.dev.sdv.radiostreamingdemoapp.model.Episode;
+import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
+import com.dev.sdv.radiostreamingdemoapp.model.Track;
 import com.dev.sdv.radiostreamingdemoapp.ui.activity.MainActivity;
 import java.lang.ref.WeakReference;
 
@@ -21,15 +19,15 @@ public class MiniPlayer implements View.OnClickListener {
   private final WeakReference<MainActivity> activity;
   private final WeakReference<ControlListener> listener;
   private View miniPlayer;
-  private ImageView ivControlPlayback;
-  private View rlControlPlayback;
+  private View rlControlPlay;
+  private View rlControlPause;
   private View rlControlStop;
   private View rlControlFastForward;
   private View rlControlFastRewind;
   private TextView tvTitle;
   private TextView tvSubitle;
 
-  private Episode episode;
+  private Track track;
 
   public MiniPlayer(MainActivity activity, ControlListener listener){
     this.activity = new WeakReference<>(activity);
@@ -39,8 +37,8 @@ public class MiniPlayer implements View.OnClickListener {
 
   private void initMiniPlayer() {
     miniPlayer = this.activity.get().findViewById(R.id.ll_mini_player);
-    rlControlPlayback = miniPlayer.findViewById(R.id.rl_mini_player_control_playback);
-    ivControlPlayback = miniPlayer.findViewById(R.id.iv_mini_player_control_playback);
+    rlControlPlay = miniPlayer.findViewById(R.id.rl_mini_player_control_play);
+    rlControlPause = miniPlayer.findViewById(R.id.rl_mini_player_control_pause);
     rlControlStop = miniPlayer.findViewById(R.id.rl_mini_player_control_stop);
     rlControlFastForward = miniPlayer.findViewById(R.id.rl_mini_player_control_fast_forward);
     rlControlFastRewind = miniPlayer.findViewById(R.id.rl_mini_player_control_fast_rewind);
@@ -48,8 +46,10 @@ public class MiniPlayer implements View.OnClickListener {
     tvSubitle = miniPlayer.findViewById(R.id.tv_mini_player_track_title);
 
     // set Click listeners
-    if(rlControlPlayback != null)
-      rlControlPlayback.setOnClickListener(this);
+    if(rlControlPlay != null)
+      rlControlPlay.setOnClickListener(this);
+    if(rlControlPause != null)
+      rlControlPause.setOnClickListener(this);
     if(rlControlStop != null)
       rlControlStop.setOnClickListener(this);
     if(rlControlFastForward != null)
@@ -58,11 +58,11 @@ public class MiniPlayer implements View.OnClickListener {
       rlControlFastRewind.setOnClickListener(this);
   }
 
-  public void setEpisode(Episode episode, int state) {
-    this.episode = episode;
-    ivControlPlayback.setImageResource(PlaybackButtonHelper.getPlayerPlaybackButtonResId(state));
+  public void setTrack(Track track, int state) {
+    this.track = track;
+    //ivControlPlayback.setImageResource(PlaybackButtonHelper.getPlayerPlaybackButtonResId(state));
     miniPlayer.setTag(state);
-    tvTitle.setText(episode.getTitle());
+    tvTitle.setText(track.getTitle());
     /*mTimeLeft.setText(AdapterHelper.buildDurationString(
         mActivity.get(),
         episode.getEpisodeStatus(),
@@ -118,11 +118,17 @@ public class MiniPlayer implements View.OnClickListener {
 
   @Override public void onClick(View v) {
     switch (v.getId()){
-      case R.id.rl_mini_player_control_playback:
-        Log.d(TAG, "Mini player: playback");
+      case R.id.rl_mini_player_control_play:
+        Log.d(TAG, "Mini player: play");
+        showPauseButton();
+        break;
+      case R.id.rl_mini_player_control_pause:
+        Log.d(TAG, "Mini player: pause");
+        showPlayButton();
         break;
       case R.id.rl_mini_player_control_stop:
         Log.d(TAG, "Mini player: stop");
+        showPlayButton();
         break;
       case R.id.rl_mini_player_control_fast_forward:
         Log.d(TAG, "Mini player: fast forward");
@@ -133,6 +139,18 @@ public class MiniPlayer implements View.OnClickListener {
         default:
           Log.d(TAG, "Mini player: unknown button pressed");
     }
+  }
+
+  private void showPauseButton(){
+    rlControlPlay.setVisibility(View.GONE);
+    rlControlPause.setVisibility(View.VISIBLE);
+    miniPlayer.invalidate();
+  }
+
+  private void showPlayButton(){
+    rlControlPause.setVisibility(View.GONE);
+    rlControlPlay.setVisibility(View.VISIBLE);
+    miniPlayer.invalidate();
   }
 
   public interface ControlListener{

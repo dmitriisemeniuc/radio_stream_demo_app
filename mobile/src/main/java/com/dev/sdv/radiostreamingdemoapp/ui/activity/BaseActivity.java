@@ -10,7 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
-import com.dev.sdv.radiostreamingdemoapp.model.Collectable;
+import com.dev.sdv.radiostreamingdemoapp.model.Track;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
@@ -34,7 +34,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
   protected abstract void onCreateBase(Bundle savedInstanceState);
 
-  protected abstract void onStateChanged(int state, Collectable item);
+  protected abstract void onStateChanged(int state, Track track);
 
   // Other methods
 

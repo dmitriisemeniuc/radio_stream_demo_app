@@ -1,16 +1,13 @@
 package com.dev.sdv.radiostreamingdemoapp.ui.activity;
 
-import android.drm.DrmStore;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.util.Log;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
-import com.dev.sdv.radiostreamingdemoapp.model.Collectable;
-import com.dev.sdv.radiostreamingdemoapp.model.Episode;
+import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
+import com.dev.sdv.radiostreamingdemoapp.model.Track;
 import com.dev.sdv.radiostreamingdemoapp.ui.view.MiniPlayer;
 
 public class MainActivity extends BaseActivity implements MiniPlayer.ControlListener {
@@ -55,18 +52,16 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     initViews();
   }
 
-  @Override protected void onStateChanged(int state, Collectable item) {
+  @Override protected void onStateChanged(int state, Track track) {
     if(miniPlayer == null){
       return;
     }
 
-    if(item != null){
-      if(item instanceof Episode){
-        // Changed state of Episode
+    if(track != null){
+        // Changed state of PodcastEpisode
         if(state != PlaybackState.STATE_STOPPED){
-          miniPlayer.setEpisode((Episode) item, state);
+          miniPlayer.setTrack(track, state);
         }
-      }
     } else {
       miniPlayer.clearMetadata();
     }

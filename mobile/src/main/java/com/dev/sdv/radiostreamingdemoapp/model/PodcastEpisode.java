@@ -1,17 +1,15 @@
 package com.dev.sdv.radiostreamingdemoapp.model;
 
-public class Episode implements Collectable {
+public class PodcastEpisode extends Track {
 
   private int id = -1;
-  private String title;
   private String subtitle;
-  private String url;
 
-  public Episode(){
+  public PodcastEpisode(){
 
   }
 
-  public Episode(EpisodeBuilder builder) {
+  public PodcastEpisode(EpisodeBuilder builder) {
     this.id = builder.id;
     this.title = builder.title;
     this.subtitle = builder.subtitle;
@@ -19,35 +17,27 @@ public class Episode implements Collectable {
   }
 
   /**
-   * Copy Episode
+   * Copy PodcastEpisode
    * */
-  public Episode(Episode episode) {
+  public PodcastEpisode(PodcastEpisode episode) {
     title = episode.getTitle();
     subtitle = episode.getSubtitle();
     url = episode.getUrl();
   }
 
-  @Override public int getId() {
+  public int getId() {
     return id;
   }
 
-  @Override public String getTitle() {
-    return title;
-  }
-
-  @Override public String getSubtitle() {
+  public String getSubtitle() {
     return subtitle;
-  }
-
-  @Override public String getUrl() {
-    return null;
   }
 
   @Override public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    Episode episode = (Episode) o;
+    PodcastEpisode episode = (PodcastEpisode) o;
 
     if (id != episode.id) return false;
     if (title != null ? !title.equals(episode.title) : episode.title != null) return false;
@@ -66,7 +56,7 @@ public class Episode implements Collectable {
   }
 
   @Override public String toString() {
-    return "Episode{" +
+    return "PodcastEpisode{" +
         "id=" + id +
         ", title='" + title + '\'' +
         ", subtitle='" + subtitle + '\'' +
@@ -100,8 +90,8 @@ public class Episode implements Collectable {
       return this;
     }
 
-    public Episode build() {
-      return new Episode(this);
+    public PodcastEpisode build() {
+      return new PodcastEpisode(this);
     }
   }
 }
