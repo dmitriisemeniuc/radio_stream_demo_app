@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:weightSum="101"
+    android:background="@color/bgMiniPlayer"
+    android:id="@+id/ll_mini_player"
+>
+
+  <!-- Mini player controls -->
+  <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="50">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="100"
+        android:layout_centerInParent="true"
+    >
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_control_fast_rewind"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="25"
+      >
+
+        <ImageView
+            android:id="@+id/iv_mini_player_control_fast_rewind"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_fast_rewind_black_24px"
+            android:layout_centerInParent="true"
+            android:tint="@android:color/white"
+        />
+
+      </RelativeLayout>
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_control_play"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="25">
+
+        <ImageView
+            android:id="@+id/iv_mini_player_control_play"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_play_arrow_black_24px"
+            android:layout_centerInParent="true"
+            android:tint="@android:color/white"
+        />
+
+      </RelativeLayout>
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_control_pause"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="25"
+          android:visibility="gone"
+      >
+
+        <ImageView
+            android:id="@+id/iv_mini_player_control_pause"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_play_arrow_black_24px"
+            android:layout_centerInParent="true"
+            android:tint="@android:color/white"
+        />
+
+      </RelativeLayout>
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_control_stop"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="25">
+
+        <ImageView
+            android:id="@+id/iv_mini_player_control_stop"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_stop_black_24px"
+            android:layout_centerInParent="true"
+            android:tint="@android:color/white"
+        />
+
+      </RelativeLayout>
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_control_fast_forward"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="25">
+
+        <ImageView
+            android:id="@+id/iv_mini_player_control_fast_forward"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_fast_forward_black_24px"
+            android:layout_centerInParent="true"
+            android:tint="@android:color/white"
+        />
+
+      </RelativeLayout>
+
+
+    </LinearLayout>
+
+  </RelativeLayout>
+
+  <!-- divider -->
+  <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:paddingTop="4dp"
+      android:paddingBottom="4dp"
+  >
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:layout_centerInParent="true"
+    />
+  </RelativeLayout>
+
+  <!-- Title, favorite-->
+  <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="50"
+  >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="100"
+    >
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_logo"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="25"
+      >
+
+        <ImageView
+            android:id="@+id/iv_mini_player_logo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_image_black_24px"
+            android:tint="@android:color/white"
+            android:layout_centerInParent="true"
+        />
+
+      </RelativeLayout>
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_title"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="55"
+      >
+
+        <LinearLayout
+            android:id="@+id/ll_mini_player_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+        >
+
+          <TextView
+              android:id="@+id/tv_mini_player_channel_title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="ABC Radio 99.7 "
+              android:textColor="@android:color/white"
+              android:ellipsize="end"
+              android:singleLine="true"
+              android:maxLines="1"
+              android:textSize="16sp"
+              android:textStyle="bold"
+          />
+
+          <TextView
+              android:id="@+id/tv_mini_player_track_title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Rejoice - Steve Angello"
+              android:textColor="@android:color/white"
+              android:ellipsize="end"
+              android:singleLine="true"
+              android:maxLines="1"
+              android:textSize="14sp"
+          />
+
+        </LinearLayout>
+
+      </RelativeLayout>
+
+      <RelativeLayout
+          android:id="@+id/rl_mini_player_favorites"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="20"
+      >
+
+        <ImageView
+            android:id="@+id/iv_mini_player_favorites"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_star_black_24px"
+            android:tint="@android:color/white"
+            android:layout_centerInParent="true"
+        />
+
+      </RelativeLayout>
+
+    </LinearLayout>
+
+  </RelativeLayout>
+
+</LinearLayout>

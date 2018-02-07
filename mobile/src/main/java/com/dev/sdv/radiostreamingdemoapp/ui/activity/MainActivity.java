@@ -1,4 +1,4 @@
-package com.dev.sdv.radiostreamingdemoapp.screens.activity;
+package com.dev.sdv.radiostreamingdemoapp.ui.activity;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -7,10 +7,12 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.util.Log;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
+import com.dev.sdv.radiostreamingdemoapp.ui.view.MiniPlayer;
 
 public class MainActivity extends BaseActivity {
 
   private BottomSheetBehavior behavior;
+  private MiniPlayer miniPlayer;
 
   // Lifecycle methods
 
@@ -54,26 +56,52 @@ public class MainActivity extends BaseActivity {
   private void initViews(){
     initChannelsMenu();
     initBottomSheet();
+    setupMiniPlayer();
   }
 
   private void initChannelsMenu(){
     Log.d(TAG, "Initialized channels menu");
+    // TODO: implement channels menu
   }
 
   private void initBottomSheet(){
+    // Initialize bottom sheet container with mini player inside it
     View bottomSheetView = findViewById(R.id.nsv_bottom_sheet);
     if(bottomSheetView != null){
       behavior = BottomSheetBehavior.from(bottomSheetView);
       Log.d(TAG, "Initialized Bottom sheet");
       if(behavior != null){
-        View view = findViewById(R.id.fragment_bottom_container);
-        if(view != null)
-          behavior.setPeekHeight(view.getHeight());
-        Log.d(TAG, String.format("Bottom sheet initial peek height: %d", behavior.getPeekHeight()));
+        Log.d(TAG, String.format("Bottom sheet initial height: %d", behavior.getPeekHeight()));
         behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         Log.d(TAG, String.format("Bottom sheet initial state: %s", behavior.getState()));
         //behavior.setBottomSheetCallback();
       }
     }
+  }
+
+  /**
+   * Configures the mini player
+   */
+  private void setupMiniPlayer(){
+    miniPlayer = new MiniPlayer(this);
+    showMiniPlayer();
+  }
+
+  private boolean showMiniPlayer(){
+    if(behavior != null){
+      behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+      behavior.setHideable(false);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean hideMiniPlayer(){
+    if(behavior != null){
+      behavior.setHideable(true);
+      behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+      return true;
+    }
+    return false;
   }
 }

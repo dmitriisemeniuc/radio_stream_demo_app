@@ -1,7 +1,6 @@
-package com.dev.sdv.radiostreamingdemoapp.screens.activity;
+package com.dev.sdv.radiostreamingdemoapp.ui.activity;
 
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,7 +10,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
-import com.dev.sdv.radiostreamingdemoapp.utils.Const;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
