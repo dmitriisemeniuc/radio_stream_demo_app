@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="100dp"
+    android:layout_height="match_parent"
+    android:layout_alignParentStart="true"
+    android:orientation="vertical"
+    android:weightSum="100"
+    android:background="@color/bgMenu"
+>
+
+  <RelativeLayout
+      android:id="@+id/rl_menu_channels_radio"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="25"
+      android:background="@color/bgMenuChannelsRadio"
+  >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:text="Radio"
+        android:layout_centerInParent="true"
+    />
+
+  </RelativeLayout>
+
+  <RelativeLayout
+      android:id="@+id/rl_menu_channels_music"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="25"
+      android:background="@color/bgMenuChannelsMusic"
+  >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:text="Music"
+        android:layout_centerInParent="true"
+    />
+
+  </RelativeLayout>
+
+  <RelativeLayout
+      android:id="@+id/rl_menu_channels_podcasts"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="25"
+      android:background="@color/bgMenuChannelsPodcasts"
+  >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:text="Podcasts"
+        android:layout_centerInParent="true"
+    />
+
+  </RelativeLayout>
+
+  <RelativeLayout
+      android:id="@+id/rl_menu_channels_favorites"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="25"
+      android:background="@color/bgMenuChannelsFavorites"
+  >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:text="Favorites"
+        android:layout_centerInParent="true"
+    />
+
+  </RelativeLayout>
+
+</LinearLayout>
