@@ -61,7 +61,7 @@ import java.util.List;
  *
  * </ul>
  */
-public class StreamService extends MediaBrowserServiceCompat {
+public class MediaPlayerService extends MediaBrowserServiceCompat {
 
   private MediaSessionCompat mSession;
 
@@ -69,7 +69,7 @@ public class StreamService extends MediaBrowserServiceCompat {
   public void onCreate() {
     super.onCreate();
 
-    mSession = new MediaSessionCompat(this, "StreamService");
+    mSession = new MediaSessionCompat(this, "MediaPlayerService");
     setSessionToken(mSession.getSessionToken());
     mSession.setCallback(new MediaSessionCallback());
     mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |

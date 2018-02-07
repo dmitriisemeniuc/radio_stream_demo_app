@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
+import com.dev.sdv.radiostreamingdemoapp.model.Collectable;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
@@ -32,6 +33,8 @@ public abstract class BaseActivity extends AppCompatActivity {
   protected abstract int getLayoutResourceId();
 
   protected abstract void onCreateBase(Bundle savedInstanceState);
+
+  protected abstract void onStateChanged(int state, Collectable item);
 
   // Other methods
 

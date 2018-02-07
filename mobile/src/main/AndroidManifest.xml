@@ -29,7 +29,7 @@
          MediaBrowser (for browsing) and MediaController (for playback control)
         -->
     <service
-        android:name=".media.service.StreamService"
+        android:name=".media.service.MediaPlayerService"
         android:exported="true">
       <intent-filter>
         <action android:name="android.media.browse.MediaBrowserService"/>

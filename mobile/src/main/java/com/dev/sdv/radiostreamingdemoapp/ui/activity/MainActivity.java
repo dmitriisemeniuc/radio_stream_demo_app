@@ -1,5 +1,7 @@
 package com.dev.sdv.radiostreamingdemoapp.ui.activity;
 
+import android.drm.DrmStore;
+import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -7,9 +9,11 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.util.Log;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
+import com.dev.sdv.radiostreamingdemoapp.model.Collectable;
+import com.dev.sdv.radiostreamingdemoapp.model.Episode;
 import com.dev.sdv.radiostreamingdemoapp.ui.view.MiniPlayer;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements MiniPlayer.ControlListener {
 
   private BottomSheetBehavior behavior;
   private MiniPlayer miniPlayer;
@@ -51,6 +55,23 @@ public class MainActivity extends BaseActivity {
     initViews();
   }
 
+  @Override protected void onStateChanged(int state, Collectable item) {
+    if(miniPlayer == null){
+      return;
+    }
+
+    if(item != null){
+      if(item instanceof Episode){
+        // Changed state of Episode
+        if(state != PlaybackState.STATE_STOPPED){
+          miniPlayer.setEpisode((Episode) item, state);
+        }
+      }
+    } else {
+      miniPlayer.clearMetadata();
+    }
+  }
+
   // Other methods
 
   private void initViews(){
@@ -83,24 +104,23 @@ public class MainActivity extends BaseActivity {
    * Configures the mini player
    */
   private void setupMiniPlayer(){
-    miniPlayer = new MiniPlayer(this);
-    showMiniPlayer();
+    miniPlayer = new MiniPlayer(this, this);
   }
 
-  private boolean showMiniPlayer(){
+  @Override public boolean onShow() {
     if(behavior != null){
       behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
       behavior.setHideable(false);
-      return true;
+      return behavior.getState() == BottomSheetBehavior.STATE_EXPANDED;
     }
     return false;
   }
 
-  private boolean hideMiniPlayer(){
+  @Override public boolean onHide() {
     if(behavior != null){
       behavior.setHideable(true);
       behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-      return true;
+      return behavior.getState() == BottomSheetBehavior.STATE_HIDDEN;
     }
     return false;
   }
