@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
 import com.dev.sdv.radiostreamingdemoapp.media.MediaControllerCallback;
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.ControlListener;
 import com.dev.sdv.radiostreamingdemoapp.media.service.MediaService;
 import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisodeModel;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
@@ -20,17 +21,20 @@ import com.dev.sdv.radiostreamingdemoapp.ui.view.MiniPlayer;
 import com.dev.sdv.radiostreamingdemoapp.utils.SystemUtils;
 import java.lang.ref.WeakReference;
 
-public class MainActivity extends BaseActivity implements MiniPlayer.ControlListener {
+public class MainActivity extends BaseActivity implements ControlListener {
 
   private BottomSheetBehavior behavior;
   private MiniPlayer miniPlayer;
   private MediaController mediaController;
-  private MediaService.MediaServiceBinder mediaServiceBinder;
   private MediaService mediaService;
   private MediaServiceConnection mediaServiceConnection;
+  private MediaService.MediaServiceBinder mediaServiceBinder;
+
   private boolean mediaServiceBound;
 
-  // Lifecycle methods
+  /* ***********************************************************************************************
+   * Lifecycle
+   * */
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -57,12 +61,17 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
   }
 
   @Override protected void onDestroy() {
-    super.onDestroy();
     stopMediaService();
+    super.onDestroy();
   }
 
-  // Override methods
+  /*
+  * END of Lifecycle
+  *************************************************************************************************/
 
+  /* ***********************************************************************************************
+  * Override methods
+  * */
   @Override protected int getLayoutResourceId() {
     return R.layout.activity_main;
   }
@@ -77,10 +86,10 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     }
 
     if(track != null){
-        // Changed state of PodcastEpisode
-        if(state != PlaybackState.STATE_STOPPED){
-          miniPlayer.setTrack(track, state);
-        }
+      // Changed state of PodcastEpisode
+      if(state != PlaybackState.STATE_STOPPED){
+        miniPlayer.setTrack(track, state);
+      }
     } else {
       miniPlayer.clearMetadata();
     }
@@ -95,7 +104,64 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     return state;
   }
 
-  // Other methods
+  /**
+   * Called on Mini Media player show request
+   * */
+  @Override public boolean onShow() {
+    if(behavior != null){
+      behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+      behavior.setHideable(false);
+      return behavior.getState() == BottomSheetBehavior.STATE_EXPANDED;
+    }
+    return false;
+  }
+
+  /**
+  * Called on Mini Media player hide request
+  * */
+  @Override public boolean onHide() {
+    if(behavior != null){
+      behavior.setHideable(true);
+      behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+      return behavior.getState() == BottomSheetBehavior.STATE_HIDDEN;
+    }
+    return false;
+  }
+
+  @Override
+  public void onPlayerServiceBoundBase() {
+    mediaController = new MediaController(getApplicationContext(), mediaService.getMediaSessionToken());
+    mediaController.registerCallback(new MediaControllerCallback(this));
+    onStateChanged(getState(), getTrack());
+    //onPlayerServiceBound();
+  }
+
+  @Override
+  public Track getTrack(){
+    Track track = null;
+    //final AppPrefHelper appPrefHelper = AppPrefHelper.getInstance(this);
+    int trackId = -1;
+
+    if (mediaController != null && mediaController.getExtras() != null &&
+        mediaController.getExtras().containsKey(MediaService.PARAM_TRACK_ID)) {
+      trackId = mediaController.getExtras().getInt(MediaService.PARAM_TRACK_ID);
+    }  /*else if (appPrefHelper.getLastPlayedTrackId() != -1) {
+      trackId = appPrefHelper.getLastPlayedTrackId();
+    }*/
+
+    if (trackId != -1) {
+      track = PodcastEpisodeModel.getDefault();
+    }
+    //return track;
+    return PodcastEpisodeModel.getDefault();
+  }
+  /*
+  * END of Override methods
+  *************************************************************************************************/
+
+  /* ***********************************************************************************************
+  * Other methods
+  * */
 
   private void initViews(){
     initChannelsMenu();
@@ -123,6 +189,9 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     }
   }
 
+  /**
+   * Starts {@link MediaService} service
+   * */
   private void bindMediaService(){
     Intent intent = new Intent(this, MediaService.class);
     mediaServiceConnection = new MediaServiceConnection(this);
@@ -130,39 +199,9 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     startService(intent);
   }
 
-  @Override
-  public void onPlayerServiceBoundBase() {
-    mediaController = new MediaController(getApplicationContext(), mediaService.getMediaSessionToken());
-    mediaController.registerCallback(new MediaControllerCallback(this));
-    onStateChanged(getState(), getTrack());
-    //onPlayerServiceBound();
-  }
-
-  /**
-   * Configures the mini player
+  /***
+   * Stops {@link MediaService} service
    */
-  private void setupMiniPlayer(){
-    miniPlayer = new MiniPlayer(this, this);
-  }
-
-  @Override public boolean onShow() {
-    if(behavior != null){
-      behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-      behavior.setHideable(false);
-      return behavior.getState() == BottomSheetBehavior.STATE_EXPANDED;
-    }
-    return false;
-  }
-
-  @Override public boolean onHide() {
-    if(behavior != null){
-      behavior.setHideable(true);
-      behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-      return behavior.getState() == BottomSheetBehavior.STATE_HIDDEN;
-    }
-    return false;
-  }
-
   private void stopMediaService(){
     if(SystemUtils.isServiceRunning(MediaService.class, this)){
       Intent intent = new Intent(this, MediaService.class);
@@ -174,35 +213,13 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     }
   }
 
-  public class MediaServiceConnection implements ServiceConnection {
-
-    private WeakReference<BaseActivity> activity;
-
-    public MediaServiceConnection(BaseActivity activity) {
-      this.activity = new WeakReference<>(activity);
-    }
-
-    @Override public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-      mediaServiceBinder = (MediaService.MediaServiceBinder) iBinder;
-      mediaService = mediaServiceBinder.getService();
-      mediaServiceBound = true;
-
-      BaseActivity activity = this.activity.get();
-
-      if (activity == null) {
-        return;
-      }
-
-      activity.onPlayerServiceBoundBase();
-    }
-
-    @Override public void onServiceDisconnected(ComponentName componentName) {
-      if(mediaServiceBound){
-        mediaServiceBound = false;
-        stopMediaService();
-      }
-    }
+  /**
+   * Configures the mini player
+   */
+  private void setupMiniPlayer(){
+    miniPlayer = new MiniPlayer(this, this);
   }
+
   /**
    * Playback control methods
    * */
@@ -235,24 +252,44 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
       MediaService.sendIntent(this, MediaService.ACTION_STOP_SERVICE, track.getId());
     }
   }
+  /*
+  * END of Other methods
+  * **/
 
-  @Override
-  public Track getTrack(){
-    Track track = null;
-    //final AppPrefHelper appPrefHelper = AppPrefHelper.getInstance(this);
-    int trackId = -1;
+  /* ***********************************************************************************************
+  * Inner classes
+  * */
 
-    if (mediaController != null && mediaController.getExtras() != null &&
-        mediaController.getExtras().containsKey(MediaService.PARAM_TRACK_ID)) {
-      trackId = mediaController.getExtras().getInt(MediaService.PARAM_TRACK_ID);
-    }  /*else if (appPrefHelper.getLastPlayedTrackId() != -1) {
-      trackId = appPrefHelper.getLastPlayedTrackId();
-    }*/
+  public class MediaServiceConnection implements ServiceConnection {
 
-    if (trackId != -1) {
-      track = PodcastEpisodeModel.getDefault();
+    private WeakReference<BaseActivity> activity;
+
+    public MediaServiceConnection(BaseActivity activity) {
+      this.activity = new WeakReference<>(activity);
     }
-    //return track;
-    return PodcastEpisodeModel.getDefault();
+
+    @Override public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+      mediaServiceBinder = (MediaService.MediaServiceBinder) iBinder;
+      mediaService = mediaServiceBinder.getService();
+      mediaServiceBound = true;
+
+      BaseActivity activity = this.activity.get();
+
+      if (activity == null) {
+        return;
+      }
+
+      activity.onPlayerServiceBoundBase();
+    }
+
+    @Override public void onServiceDisconnected(ComponentName componentName) {
+      if(mediaServiceBound){
+        mediaServiceBound = false;
+        stopMediaService();
+      }
+    }
   }
+  /*
+  * END of Inner classes
+  *************************************************************************************************/
 }

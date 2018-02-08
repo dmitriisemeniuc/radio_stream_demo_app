@@ -20,7 +20,9 @@ public abstract class BaseActivity extends AppCompatActivity {
   private ProgressDialog progressDialog;
   private Menu menu;
 
-  // Override methods
+  /* ***********************************************************************************************
+  * Override methods
+  * */
 
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -28,8 +30,13 @@ public abstract class BaseActivity extends AppCompatActivity {
     startApp(savedInstanceState);
   }
 
-  // Abstract methods
+  /*
+   * END of Override methods
+   ************************************************************************************************/
 
+  /* ***********************************************************************************************
+   * Abstract methods
+   * */
   protected abstract int getLayoutResourceId();
 
   protected abstract void onCreateBase(Bundle savedInstanceState);
@@ -38,13 +45,20 @@ public abstract class BaseActivity extends AppCompatActivity {
 
   public abstract void onPlayerServiceBoundBase();
 
-  //public abstract void onPlayerServiceBound();
-
   public abstract Track getTrack();
 
   public abstract int getState();
+  /*
+  * END of Abstract methods
+  *************************************************************************************************/
 
-  // Other methods
+  /* ***********************************************************************************************
+  * Other methods
+  * */
+
+  protected int getMenuResourceId(){
+    return -1;
+  }
 
   private void startApp(Bundle savedInstanceState){
     /*Intent intent = getIntent();
@@ -73,7 +87,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     onCreateBase(savedInstanceState);
   }
 
-  protected int getMenuResourceId(){
-    return -1;
-  }
+  /*
+  * END of Other methods
+  *************************************************************************************************/
 }

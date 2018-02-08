@@ -1,4 +1,4 @@
-package com.dev.sdv.radiostreamingdemoapp.media;
+package com.dev.sdv.radiostreamingdemoapp.media.listeners;
 
 public interface ProgressUpdateListener {
 

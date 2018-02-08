@@ -7,23 +7,29 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.dev.sdv.radiostreamingdemoapp.R;
 import com.dev.sdv.radiostreamingdemoapp.helper.PlaybackButtonHelper;
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.ControlListener;
 import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
 import com.dev.sdv.radiostreamingdemoapp.ui.activity.MainActivity;
 import java.lang.ref.WeakReference;
 
+/**
+ * Class represents view wrapper for Mini Player view control.
+ * */
 public class MiniPlayer implements View.OnClickListener {
 
   public static final String TAG = MiniPlayer.class.getSimpleName();
 
   private final WeakReference<MainActivity> activity;
   private final WeakReference<ControlListener> listener;
+
   private View miniPlayer;
   private View rlControlPlay;
   private View rlControlPause;
   private View rlControlStop;
   private View rlControlFastForward;
   private View rlControlFastRewind;
+
   private TextView tvTitle;
   private TextView tvSubitle;
 
@@ -35,87 +41,45 @@ public class MiniPlayer implements View.OnClickListener {
     initMiniPlayer();
   }
 
+  /* **********************************************************************************************
+  * Initialization
+  * */
+
   private void initMiniPlayer() {
     miniPlayer = this.activity.get().findViewById(R.id.ll_mini_player);
-    rlControlPlay = miniPlayer.findViewById(R.id.rl_mini_player_control_play);
-    rlControlPause = miniPlayer.findViewById(R.id.rl_mini_player_control_pause);
-    rlControlStop = miniPlayer.findViewById(R.id.rl_mini_player_control_stop);
-    rlControlFastForward = miniPlayer.findViewById(R.id.rl_mini_player_control_fast_forward);
-    rlControlFastRewind = miniPlayer.findViewById(R.id.rl_mini_player_control_fast_rewind);
-    tvTitle = miniPlayer.findViewById(R.id.tv_mini_player_channel_title);
-    tvSubitle = miniPlayer.findViewById(R.id.tv_mini_player_track_title);
+    if(miniPlayer != null){
+      rlControlPlay = miniPlayer.findViewById(R.id.rl_mini_player_control_play);
+      rlControlPause = miniPlayer.findViewById(R.id.rl_mini_player_control_pause);
+      rlControlStop = miniPlayer.findViewById(R.id.rl_mini_player_control_stop);
+      rlControlFastForward = miniPlayer.findViewById(R.id.rl_mini_player_control_fast_forward);
+      rlControlFastRewind = miniPlayer.findViewById(R.id.rl_mini_player_control_fast_rewind);
+      tvTitle = miniPlayer.findViewById(R.id.tv_mini_player_channel_title);
+      tvSubitle = miniPlayer.findViewById(R.id.tv_mini_player_track_title);
+    }
+    setOnClickListeners();
+  }
 
+  private void setOnClickListeners(){
     // set Click listeners
-    if(rlControlPlay != null)
-      rlControlPlay.setOnClickListener(this);
-    if(rlControlPause != null)
-      rlControlPause.setOnClickListener(this);
-    if(rlControlStop != null)
-      rlControlStop.setOnClickListener(this);
-    if(rlControlFastForward != null)
-      rlControlFastForward.setOnClickListener(this);
-    if(rlControlFastRewind != null)
-      rlControlFastRewind.setOnClickListener(this);
+    setListener(rlControlPlay);
+    setListener(rlControlPause);
+    setListener(rlControlStop);
+    setListener(rlControlFastForward);
+    setListener(rlControlFastRewind);
   }
 
-  public void setTrack(Track track, int state) {
-    this.track = track;
-    //ivControlPlayback.setImageResource(PlaybackButtonHelper.getPlayerPlaybackButtonResId(state));
-    miniPlayer.setTag(state);
-    tvTitle.setText(track.getTitle());
-    /*mTimeLeft.setText(AdapterHelper.buildDurationString(
-        mActivity.get(),
-        episode.getEpisodeStatus(),
-        episode.getDuration(),
-        episode.getProgress()));*/
-
-    // load image into the channel art view
-    /*ImageLoadHelper.loadImageIntoView(mMiniPlayer.getContext(), episode.getChannelArtworkUrl(),
-        mChannelArt);*/
-
-    // load image so that we can extract colors from it
-    /*ImageLoadHelper.loadImageAsync(mMiniPlayer.getContext(), mEpisode.getChannelArtworkUrl(),
-        new ImageLoadedListener(this));*/
-    showPlayer();
+  private void setListener(View view){
+    if(view != null)
+      view.setOnClickListener(this);
   }
 
-  public void setTitle(String title){
-    if(!TextUtils.isEmpty(title) && tvTitle != null){
-      tvTitle.setText(title);
-    }
-  }
+  /*
+  * END of Initialization
+  *************************************************************************************************/
 
-  public void setSubtitle(String subtitle){
-    if(!TextUtils.isEmpty(subtitle) && tvSubitle != null){
-      tvSubitle.setText(subtitle);
-    }
-  }
-
-  public void clearMetadata(){
-    if(tvTitle != null){
-      tvTitle.setText(null);
-    }
-    if(tvSubitle != null){
-      tvSubitle.setText(null);
-    }
-  }
-
-  private boolean showPlayer(){
-    if(listener.get() != null){
-      return listener.get().onShow();
-    }
-    return false;
-  }
-
-  private boolean hidePlayer(){
-    if(listener.get() != null){
-      return listener.get().onHide();
-    }
-    return false;
-  }
-
-  // TODO: add logo and favorites
-
+  /* ***********************************************************************************************
+   * Override methods
+   * */
   @Override public void onClick(View v) {
     MainActivity activity = this.activity.get();
 
@@ -144,10 +108,30 @@ public class MiniPlayer implements View.OnClickListener {
       case R.id.rl_mini_player_control_fast_rewind:
         Log.d(TAG, "pressed  fast rewind");
         break;
-        default:
-          Log.d(TAG, "unknown button pressed");
+      default:
+        Log.d(TAG, "unknown button pressed");
     }
   }
+  /*
+   * END of Override methods
+   * */
+
+  /* ***********************************************************************************************
+   * Other methods
+   * */
+  public void setTitle(String title){
+    if(!TextUtils.isEmpty(title) && tvTitle != null){
+      tvTitle.setText(title);
+    }
+  }
+
+  public void setSubtitle(String subtitle){
+    if(!TextUtils.isEmpty(subtitle) && tvSubitle != null){
+      tvSubitle.setText(subtitle);
+    }
+  }
+
+  // TODO: add logo and favorites
 
   private void showPauseButton(){
     rlControlPlay.setVisibility(View.GONE);
@@ -161,8 +145,42 @@ public class MiniPlayer implements View.OnClickListener {
     miniPlayer.invalidate();
   }
 
-  public interface ControlListener{
-    boolean onShow();
-    boolean onHide();
+  public void clearMetadata(){
+    if(tvTitle != null){
+      tvTitle.setText(null);
+    }
+    if(tvSubitle != null){
+      tvSubitle.setText(null);
+    }
+    // TODO: hide logo and track duration
   }
+
+  private boolean showPlayer(){
+    if(listener.get() != null){
+      return listener.get().onShow();
+    }
+    return false;
+  }
+
+  private boolean hidePlayer(){
+    if(listener.get() != null){
+      return listener.get().onHide();
+    }
+    return false;
+  }
+
+  public void setTrack(Track track, int state) {
+    this.track = track;
+    // TODO: set logo
+    miniPlayer.setTag(state);
+    tvTitle.setText(track.getTitle());
+    // TODO: set duration
+    // TODO: set time left
+    // TODO: set progress
+    showPlayer();
+  }
+
+  /*
+  * END of other methods
+  *************************************************************************************************/
 }

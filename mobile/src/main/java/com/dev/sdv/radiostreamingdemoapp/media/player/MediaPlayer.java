@@ -1,5 +1,6 @@
-package com.dev.sdv.radiostreamingdemoapp.media;
+package com.dev.sdv.radiostreamingdemoapp.media.player;
 
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.ProgressUpdateListener;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
 
 public abstract class MediaPlayer {

@@ -6,16 +6,14 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
-import android.net.Uri;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import com.dev.sdv.radiostreamingdemoapp.media.MediaPlayer;
 import com.dev.sdv.radiostreamingdemoapp.media.MediaPlayerState;
-import com.dev.sdv.radiostreamingdemoapp.media.ProgressUpdateListener;
-import com.dev.sdv.radiostreamingdemoapp.media.TrackMediaPlayer;
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.ProgressUpdateListener;
+import com.dev.sdv.radiostreamingdemoapp.media.player.MediaPlayer;
+import com.dev.sdv.radiostreamingdemoapp.media.player.TrackMediaPlayer;
 import com.dev.sdv.radiostreamingdemoapp.model.Playlist;
 import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
@@ -28,12 +26,12 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
   public static final String PACKAGE_NAME = "com.dev.sdv.radiostreamingdemoapp.";
 
-  public static final String ACTION_PLAY_TRACK        = PACKAGE_NAME + "playNew";
-  public static final String ACTION_RESUME_PLAYBACK   = PACKAGE_NAME + "play";
-  public static final String ACTION_PAUSE             = PACKAGE_NAME + "pause";
-  public static final String ACTION_PLAY_PLAYLIST     = PACKAGE_NAME + "playPlaylist";
-  public static final String ACTION_SEEK_TO           = PACKAGE_NAME + "seekTo";
-  public static final String ACTION_STOP_SERVICE      = PACKAGE_NAME + "stopService";
+  public static final String ACTION_PLAY_TRACK = PACKAGE_NAME + "playNew";
+  public static final String ACTION_RESUME_PLAYBACK = PACKAGE_NAME + "play";
+  public static final String ACTION_PAUSE = PACKAGE_NAME + "pause";
+  public static final String ACTION_PLAY_PLAYLIST = PACKAGE_NAME + "playPlaylist";
+  public static final String ACTION_SEEK_TO = PACKAGE_NAME + "seekTo";
+  public static final String ACTION_STOP_SERVICE = PACKAGE_NAME + "stopService";
 
   public static final String PARAM_TRACK_ID = "trackId";
 
@@ -47,9 +45,27 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
   private IBinder mediaServiceBinder = new MediaServiceBinder();
 
-  /******************************
-   * Service lifecycle methods
-   ******************************/
+  /* ***********************************************************************************************
+   * static
+   * */
+
+  public static void sendIntent(Context context, String action, int trackId) {
+    Intent intent = new Intent(context, MediaService.class);
+    intent.setAction(action);
+
+    if (trackId != -1) {
+      intent.putExtra(PARAM_TRACK_ID, trackId);
+    }
+    context.startService(intent);
+  }
+
+  /*
+   * END of static
+   * **********************************************************************************************/
+
+  /* ***********************************************************************************************
+   * Service lifecycle
+   */
 
   @Override
   public void onCreate() {
@@ -67,7 +83,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
     // setup media session
     mediaSession = new MediaSession(this, MediaService.class.getSimpleName());
     //mediaSession.setMediaButtonReceiver(PendingIntentHelper.getMediaButtonReceiverIntent(this));
-    mediaSession.setCallback(new MediaSessionCallback());
+    //mediaSession.setCallback(new MediaSessionCallback());
     mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS
         | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
     mediaSession.setActive(true);
@@ -77,7 +93,6 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
     // TODO: add wifi lock
 
-
   }
 
   /*
@@ -86,25 +101,9 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.d(TAG, "Media service started");
-    if(intent != null && intent.getAction() != null){
-      String action = intent.getAction();
 
-      switch (action){
-        case ACTION_PLAY_TRACK:{
-          int trackId = intent.getIntExtra(PARAM_TRACK_ID, -1);
+    handleIntent(intent);
 
-          if(trackId != -1){
-            play(trackId);
-          }
-          break;
-        }
-        case ACTION_PAUSE:{
-          pause();
-          break;
-        }
-        // TODO: add other actions
-      }
-    }
     return START_NOT_STICKY;
   }
 
@@ -114,31 +113,59 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   }
 
   @Override
-  public void onRebind(Intent intent) {
-    Log.v(TAG, "in onRebind");
-    super.onRebind(intent);
-  }
-
-  @Override
-  public boolean onUnbind(Intent intent) {
-    Log.v(TAG, "in onUnbind");
-    //return true;
-    return false;
-  }
-
-  @Override
   public void onDestroy() {
     Log.d(TAG, "Media service destroyed");
     destroyMediaPlayer();
     super.onDestroy();
+  }
 
+   /*
+   * END of Service lifecycle
+   ************************************************************************************************/
+
+  /* ***********************************************************************************************
+  * Other methods
+  * */
+
+  private void handleIntent(Intent intent) {
+    if (intent == null || intent.getAction() == null) {
+      return;
+    }
+
+    switch (intent.getAction()) {
+      case ACTION_PLAY_TRACK: {
+        int trackId = intent.getIntExtra(PARAM_TRACK_ID, -1);
+
+        if (trackId != -1) {
+          play(trackId);
+        }
+        break;
+      }
+      case ACTION_PAUSE: {
+        pause();
+        break;
+      }
+      // TODO: add other actions
+    }
   }
 
   private void destroyMediaPlayer() {
 
-   // TODO: destroy media player
+    // TODO: destroy media player
 
   }
+
+  public MediaSession.Token getMediaSessionToken() {
+    return mediaSession.getSessionToken();
+  }
+
+  /*
+  * END of other methods
+  * ***********************************************************************************************/
+
+  /* ***********************************************************************************************
+  *  listeners
+  * */
 
   @Override public void onAudioFocusChange(int i) {
     Log.d(TAG, String.format("onAudioFocusChange", i));
@@ -146,7 +173,8 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   }
 
   @Override public void onProgressUpdate(long progress, long bufferedProgress, long duration) {
-    Log.d(TAG, String.format("onProgressUpdate: progress %d, bufferedProgress %d, duration %d", progress, bufferedProgress, duration));
+    Log.d(TAG, String.format("onProgressUpdate: progress %d, bufferedProgress %d, duration %d",
+        progress, bufferedProgress, duration));
     // TODO:
   }
 
@@ -155,86 +183,26 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
     mediaPlayerState = state;
   }
 
-  public MediaSession.Token getMediaSessionToken() {
-    return mediaSession.getSessionToken();
-  }
-
-  public static void sendIntent(Context context, String action, int trackId) {
-    Intent intent = new Intent(context, MediaService.class);
-    intent.setAction(action);
-
-    if (trackId != -1) {
-      intent.putExtra(PARAM_TRACK_ID, trackId);
-    }
-    context.startService(intent);
-  }
+  /*
+  * END of listeners
+  *************************************************************************************************/
 
 
-  public class MediaServiceBinder extends Binder {
-
-    public MediaService getService() {
-      return MediaService.this;
-    }
-
-    /*public void setListener(Object listener) {
-      this.listener = listener;
-    }*/
-  }
-
-  private final class MediaSessionCallback extends MediaSession.Callback {
-
-    @Override public void onPlayFromSearch(String query, Bundle extras) {
-      // TODO:
-    }
-
-    @Override public void onSeekTo(long pos) {
-      // TODO:
-    }
-
-    @Override public void onPlay() {
-      // TODO:
-    }
-
-    @Override public void onPlayFromUri(Uri uri, Bundle extras) {
-      // TODO:
-    }
-
-    @Override public void onPause() {
-      // TODO:
-    }
-
-    @Override public void onFastForward() {
-      // TODO:
-    }
-
-    @Override public void onRewind() {
-      // TODO:
-    }
-
-    @Override public void onSkipToNext() {
-      // TODO:
-    }
-
-    @Override public void onSkipToPrevious() {
-      // TODO:
-    }
-  }
-
-  /******************************
-   * Functions for media player control
-   ******************************/
+  /* ***********************************************************************************************
+   * Incoming commands handling
+   */
 
   /**
    * Plays a track
    * Will resume from pause if state is paused, loads from scratch otherwise
+   *
    * @param trackId id of the track to play
    */
-
-  private void play(int trackId){
-    PodcastEpisode podcastEpisode = null;
+  private void play(int trackId) {
+    PodcastEpisode podcastEpisode;
 
     // load the track at track id
-    if(trackId != -1){
+    if (trackId != -1) {
       // TODO: get track by track id
       podcastEpisode = new PodcastEpisode.Builder()
           .id(1)
@@ -257,14 +225,15 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   /**
    * Plays a track
    * Will resume from pause if track is null and we are paused
+   *
    * @param track to play
    */
-  private void play(Track track, boolean playImmediately){
-    if(mediaPlayer == null){
+  private void play(Track track, boolean playImmediately) {
+    if (mediaPlayer == null) {
       mediaPlayer = new TrackMediaPlayer(this, this, this);
     }
 
-    switch (mediaPlayerState){
+    switch (mediaPlayerState) {
       case MediaPlayerState.STATE_IDLE:
       case MediaPlayerState.STATE_CONNECTING:
       case MediaPlayerState.STATE_PLAYING:
@@ -275,7 +244,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
           // TODO: endPlayback(false);
           startPlayback(track, playImmediately);
         } else if (mediaPlayerState == MediaPlayerState.STATE_PAUSED) {
-          mediaPlayer.resumePlayback();
+          resumePlayback();
         } else {
           //Timber.w("Player is playing, episode cannot be null");
           Log.w(TAG, "Player is playing, episode cannot be null");
@@ -297,18 +266,19 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
         break;
       default:
         //Timber.w("Trying to pause an track, but player is in state: %s", playbackState);
-        Log.w(TAG, String.format("Trying to pause an track, but player is in state: %s", playbackState));
+        Log.w(TAG,
+            String.format("Trying to pause an track, but player is in state: %s", playbackState));
         break;
     }
   }
 
-  private void pausePlayback() {
-   mediaPlayer.pausePlayback();
-  }
+  /*
+   * END of Incoming commands handling
+   *************************************************************************************************
 
-  /******************************
+  /* ***********************************************************************************************
    * Media Player controls
-   ******************************/
+   */
   private void startPlayback(Track track, boolean playImmediately) {
     // request audio focus
     int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
@@ -318,7 +288,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
       currentTrack = track;
       // TODO: register receiver for headset
       // TODO: wifi lock
-      if(currentTrack instanceof PodcastEpisode){
+      if (currentTrack instanceof PodcastEpisode) {
         mediaPlayer.loadTrack(new PodcastEpisode((PodcastEpisode) currentTrack));
       }
       mediaPlayer.startPlayback(playImmediately);
@@ -331,4 +301,37 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
       Log.d(TAG, String.format("Audiofocus not granted, result code: %d", result));
     }
   }
+
+
+
+  private void pausePlayback() {
+    mediaPlayer.pausePlayback();
+  }
+
+  private void resumePlayback() {
+    mediaPlayer.resumePlayback();
+  }
+
+  /*
+   * END of Media Player controls
+   ************************************************************************************************/
+
+  /* ***********************************************************************************************
+  * Inner classes
+  * */
+
+  public class MediaServiceBinder extends Binder {
+
+    public MediaService getService() {
+      return MediaService.this;
+    }
+
+    /*public void setListener(Object listener) {
+      this.listener = listener;
+    }*/
+  }
+
+  /*
+  * END of Inner classes
+  *************************************************************************************************/
 }
