@@ -117,27 +117,34 @@ public class MiniPlayer implements View.OnClickListener {
   // TODO: add logo and favorites
 
   @Override public void onClick(View v) {
+    MainActivity activity = this.activity.get();
+
+    if(activity == null){
+      return;
+    }
+
     switch (v.getId()){
       case R.id.rl_mini_player_control_play:
-        Log.d(TAG, "Mini player: play");
-        showPauseButton();
+        Log.d(TAG, "pressed play");
+        activity.onPlayTrack();
+        //showPauseButton();
         break;
       case R.id.rl_mini_player_control_pause:
-        Log.d(TAG, "Mini player: pause");
+        Log.d(TAG, "pressed pause");
         showPlayButton();
         break;
       case R.id.rl_mini_player_control_stop:
-        Log.d(TAG, "Mini player: stop");
+        Log.d(TAG, "pressed stop");
         showPlayButton();
         break;
       case R.id.rl_mini_player_control_fast_forward:
-        Log.d(TAG, "Mini player: fast forward");
+        Log.d(TAG, "pressed  fast forward");
         break;
       case R.id.rl_mini_player_control_fast_rewind:
-        Log.d(TAG, "Mini player: fast rewind");
+        Log.d(TAG, "pressed  fast rewind");
         break;
         default:
-          Log.d(TAG, "Mini player: unknown button pressed");
+          Log.d(TAG, "unknown button pressed");
     }
   }
 

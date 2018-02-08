@@ -34,7 +34,15 @@ public abstract class BaseActivity extends AppCompatActivity {
 
   protected abstract void onCreateBase(Bundle savedInstanceState);
 
-  protected abstract void onStateChanged(int state, Track track);
+  public abstract void onStateChanged(int state, Track track);
+
+  public abstract void onPlayerServiceBoundBase();
+
+  //public abstract void onPlayerServiceBound();
+
+  public abstract Track getTrack();
+
+  public abstract int getState();
 
   // Other methods
 

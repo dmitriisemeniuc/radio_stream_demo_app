@@ -9,7 +9,7 @@ public class PodcastEpisode extends Track {
 
   }
 
-  public PodcastEpisode(EpisodeBuilder builder) {
+  public PodcastEpisode(Builder builder) {
     this.id = builder.id;
     this.title = builder.title;
     this.subtitle = builder.subtitle;
@@ -64,28 +64,28 @@ public class PodcastEpisode extends Track {
         '}';
   }
 
-  public static class EpisodeBuilder {
+  public static class Builder {
     private int id = -1;
     private String title;
     private String subtitle;
     private String url;
 
-    public EpisodeBuilder id(int id) {
+    public Builder id(int id) {
       this.id = id;
       return this;
     }
 
-    public EpisodeBuilder title(String title) {
+    public Builder title(String title) {
       this.title = title;
       return this;
     }
 
-    public EpisodeBuilder subtitle(String subtitle) {
+    public Builder subtitle(String subtitle) {
       this.subtitle = subtitle;
       return this;
     }
 
-    public EpisodeBuilder url(String url) {
+    public Builder url(String url) {
       this.url = url;
       return this;
     }
