@@ -98,6 +98,10 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
           }
           break;
         }
+        case ACTION_PAUSE:{
+          pause();
+          break;
+        }
         // TODO: add other actions
       }
     }
@@ -137,15 +141,18 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   }
 
   @Override public void onAudioFocusChange(int i) {
+    Log.d(TAG, String.format("onAudioFocusChange", i));
     // TODO:
   }
 
   @Override public void onProgressUpdate(long progress, long bufferedProgress, long duration) {
+    Log.d(TAG, String.format("onProgressUpdate: progress %d, bufferedProgress %d, duration %d", progress, bufferedProgress, duration));
     // TODO:
   }
 
   @Override public void onStateChanged(int state) {
-    // TODO:
+    Log.d(TAG, String.format("onStateChanged: ", state));
+    mediaPlayerState = state;
   }
 
   public MediaSession.Token getMediaSessionToken() {
@@ -276,6 +283,27 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
         break;
       }
     }
+  }
+
+  /**
+   * Will pause the player if it's playing
+   */
+  private void pause() {
+
+    switch (mediaPlayerState) {
+      case MediaPlayerState.STATE_PLAYING:
+        // we paused, resume playing state
+        pausePlayback();
+        break;
+      default:
+        //Timber.w("Trying to pause an track, but player is in state: %s", playbackState);
+        Log.w(TAG, String.format("Trying to pause an track, but player is in state: %s", playbackState));
+        break;
+    }
+  }
+
+  private void pausePlayback() {
+   mediaPlayer.pausePlayback();
   }
 
   /******************************

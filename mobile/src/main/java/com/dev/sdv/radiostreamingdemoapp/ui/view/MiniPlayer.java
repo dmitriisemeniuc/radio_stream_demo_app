@@ -127,10 +127,11 @@ public class MiniPlayer implements View.OnClickListener {
       case R.id.rl_mini_player_control_play:
         Log.d(TAG, "pressed play");
         activity.onPlayTrack();
-        //showPauseButton();
+        showPauseButton();
         break;
       case R.id.rl_mini_player_control_pause:
         Log.d(TAG, "pressed pause");
+        activity.onPauseTrack();
         showPlayButton();
         break;
       case R.id.rl_mini_player_control_stop:

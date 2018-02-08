@@ -211,8 +211,28 @@ public class MainActivity extends BaseActivity implements MiniPlayer.ControlList
     if(track != null){
       Bundle extras = new Bundle();
       extras.putInt(MediaService.PARAM_TRACK_ID, track.getId());
-      mediaController.getTransportControls().playFromSearch(null, extras);
+      //mediaController.getTransportControls().playFromSearch(null, extras);
       MediaService.sendIntent(this, MediaService.ACTION_PLAY_TRACK, track.getId());
+    }
+  }
+
+  public void onPauseTrack(){
+    Track track = getTrack();
+    if(track != null){
+      Bundle extras = new Bundle();
+      extras.putInt(MediaService.PARAM_TRACK_ID, track.getId());
+      //mediaController.getTransportControls().playFromSearch(null, extras);
+      MediaService.sendIntent(this, MediaService.ACTION_PAUSE, track.getId());
+    }
+  }
+
+  public void onStopTrack(){
+    Track track = getTrack();
+    if(track != null){
+      Bundle extras = new Bundle();
+      extras.putInt(MediaService.PARAM_TRACK_ID, track.getId());
+      //mediaController.getTransportControls().playFromSearch(null, extras);
+      MediaService.sendIntent(this, MediaService.ACTION_STOP_SERVICE, track.getId());
     }
   }
 
