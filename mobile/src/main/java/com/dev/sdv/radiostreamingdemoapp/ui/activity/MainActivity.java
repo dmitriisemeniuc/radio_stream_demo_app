@@ -3,25 +3,34 @@ package com.dev.sdv.radiostreamingdemoapp.ui.activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.BottomSheetBehavior;
-import android.util.Log;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
+import com.dev.sdv.radiostreamingdemoapp.broadcast.PlayerStateChangeReceiver;
+import com.dev.sdv.radiostreamingdemoapp.helper.BroadcastHelper;
+import com.dev.sdv.radiostreamingdemoapp.helper.Logger;
 import com.dev.sdv.radiostreamingdemoapp.media.MediaControllerCallback;
-import com.dev.sdv.radiostreamingdemoapp.media.listeners.ControlListener;
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.PlayerVisibilityListener;
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.PlayerStateChangeListener;
 import com.dev.sdv.radiostreamingdemoapp.media.service.MediaService;
 import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisodeModel;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
+import com.dev.sdv.radiostreamingdemoapp.model.TrackModel;
 import com.dev.sdv.radiostreamingdemoapp.ui.view.MiniPlayer;
 import com.dev.sdv.radiostreamingdemoapp.utils.SystemUtils;
 import java.lang.ref.WeakReference;
 
-public class MainActivity extends BaseActivity implements ControlListener {
+public class MainActivity extends BaseActivity implements PlayerVisibilityListener,
+    PlayerStateChangeListener {
+
+  public static final String TAG = MainActivity.class.getSimpleName();
 
   private BottomSheetBehavior behavior;
   private MiniPlayer miniPlayer;
@@ -29,6 +38,8 @@ public class MainActivity extends BaseActivity implements ControlListener {
   private MediaService mediaService;
   private MediaServiceConnection mediaServiceConnection;
   private MediaService.MediaServiceBinder mediaServiceBinder;
+  private Track track;
+  private PlayerStateChangeReceiver playerStateChangeReceiver;
 
   private boolean mediaServiceBound;
 
@@ -50,10 +61,14 @@ public class MainActivity extends BaseActivity implements ControlListener {
 
   @Override protected void onResume() {
     super.onResume();
+    playerStateChangeReceiver = new PlayerStateChangeReceiver(this);
+    LocalBroadcastManager.getInstance(this).registerReceiver(playerStateChangeReceiver,
+        new IntentFilter(BroadcastHelper.INTENT_PLAYER_STATE_CHANGE));
   }
 
   @Override protected void onPause() {
     super.onPause();
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(playerStateChangeReceiver);
   }
 
   @Override protected void onStop() {
@@ -86,7 +101,7 @@ public class MainActivity extends BaseActivity implements ControlListener {
     }
 
     if(track != null){
-      // Changed state of PodcastEpisode
+      // Changed state of Track
       if(state != PlaybackState.STATE_STOPPED){
         miniPlayer.setTrack(track, state);
       }
@@ -170,7 +185,7 @@ public class MainActivity extends BaseActivity implements ControlListener {
   }
 
   private void initChannelsMenu(){
-    Log.d(TAG, "Initialized channels menu");
+    Logger.d(TAG, "Initialized channels menu");
     // TODO: implement channels menu
   }
 
@@ -179,11 +194,11 @@ public class MainActivity extends BaseActivity implements ControlListener {
     View bottomSheetView = findViewById(R.id.nsv_bottom_sheet);
     if(bottomSheetView != null){
       behavior = BottomSheetBehavior.from(bottomSheetView);
-      Log.d(TAG, "Initialized Bottom sheet");
+      Logger.d(TAG, "Initialized Bottom sheet");
       if(behavior != null){
-        Log.d(TAG, String.format("Bottom sheet initial height: %d", behavior.getPeekHeight()));
+        Logger.d(TAG, "Bottom sheet initial height", behavior.getPeekHeight());
         behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        Log.d(TAG, String.format("Bottom sheet initial state: %s", behavior.getState()));
+        Logger.d(TAG, "Bottom sheet initial state", behavior.getState());
         //behavior.setBottomSheetCallback();
       }
     }
@@ -255,6 +270,65 @@ public class MainActivity extends BaseActivity implements ControlListener {
   /*
   * END of Other methods
   * **/
+
+  /* ***********************************************************************************************
+   * Broadcast receivers
+   * */
+  /*private BroadcastReceiver playerStateChangeReceiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      int state = intent.getIntExtra(BroadcastHelper.EXTRA_PLAYER_STATE, -1);
+      String trackId = intent.getStringExtra(BroadcastHelper.EXTRA_TRACK_ID);
+
+      if (state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_PAUSED) {
+        track = TrackModel.getTrackById(context, trackId);
+        //adapter.notifyDataSetChanged();
+      }
+    }
+  };*/
+  /*
+  * END of Broadcast receivers
+  *************************************************************************************************/
+
+  /* ***********************************************************************************************
+   * listeners
+   * */
+
+  @Override public void onReceive(Context context, Intent intent) {
+    int state = intent.getIntExtra(BroadcastHelper.EXTRA_PLAYER_STATE, -1);
+    String trackId = intent.getStringExtra(BroadcastHelper.EXTRA_TRACK_ID);
+
+    switch (state){
+      case PlaybackState.STATE_PLAYING:{
+        miniPlayer.showPauseButton();
+        break;
+      }
+      case PlaybackState.STATE_PAUSED:{
+        miniPlayer.showPlayButton();
+        break;
+      }
+      case PlaybackState.STATE_CONNECTING:{
+        Logger.d("CONNECTING");
+        break;
+      }
+      case PlaybackState.STATE_BUFFERING:{
+        Logger.d("BUFFERING");
+        break;
+      }
+      case PlaybackState.STATE_STOPPED:{
+        miniPlayer.showPlayButton();
+        break;
+      }
+    }
+
+    if (state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_PAUSED) {
+      track = TrackModel.getTrackById(context, trackId);
+      //adapter.notifyDataSetChanged();
+    }
+  }
+  /*
+  * END of listeners
+  * */
 
   /* ***********************************************************************************************
   * Inner classes

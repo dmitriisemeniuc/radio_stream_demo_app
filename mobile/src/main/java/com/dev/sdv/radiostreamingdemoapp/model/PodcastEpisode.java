@@ -1,12 +1,16 @@
 package com.dev.sdv.radiostreamingdemoapp.model;
 
+import com.dev.sdv.radiostreamingdemoapp.media.TrackStatus;
+
 public class PodcastEpisode extends Track {
 
-  private int id = -1;
+  private int    id = -1;
   private String subtitle;
 
-  public PodcastEpisode(){
+  private int  status = TrackStatus.NEW;
+  private long progress;
 
+  public PodcastEpisode(){
   }
 
   public PodcastEpisode(Builder builder) {
@@ -17,7 +21,7 @@ public class PodcastEpisode extends Track {
   }
 
   /**
-   * Copy PodcastEpisode
+   * Copy Track
    * */
   public PodcastEpisode(PodcastEpisode episode) {
     title = episode.getTitle();
@@ -27,6 +31,22 @@ public class PodcastEpisode extends Track {
 
   public int getId() {
     return id;
+  }
+
+  @Override public void setStatus(int status) {
+    this.status = status;
+  }
+
+  @Override public int getStatus() {
+    return status;
+  }
+
+  @Override public void setProgress(long progress) {
+    this.progress = progress;
+  }
+
+  @Override public long getProgress() {
+    return progress;
   }
 
   public String getSubtitle() {
@@ -56,7 +76,7 @@ public class PodcastEpisode extends Track {
   }
 
   @Override public String toString() {
-    return "PodcastEpisode{" +
+    return "Track{" +
         "id=" + id +
         ", title='" + title + '\'' +
         ", subtitle='" + subtitle + '\'' +

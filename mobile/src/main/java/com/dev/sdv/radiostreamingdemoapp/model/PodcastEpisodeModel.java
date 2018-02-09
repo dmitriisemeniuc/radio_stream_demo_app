@@ -7,9 +7,9 @@ public class PodcastEpisodeModel {
   public static PodcastEpisode getDefault(){
     return new PodcastEpisode.Builder()
         .id(1)
-        .title(Const.PodcastEpisode.DEFAULT_PODCAST_TITLE)
-        .subtitle(Const.PodcastEpisode.DEFAULT_PODCAST_SUBTITLE)
-        .url(Const.PodcastEpisode.DEFAULT_PODCAST_URL)
+        .title(Const.Track.DEBUG_PODCAST_TITLE)
+        .subtitle(Const.Track.DEBUG_PODCAST_SUBTITLE)
+        .url(Const.Track.DEBUG_PODCAST_URL)
         .build();
   }
 }

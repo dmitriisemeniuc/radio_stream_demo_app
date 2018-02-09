@@ -21,7 +21,7 @@ public abstract class BaseActivity extends AppCompatActivity {
   private Menu menu;
 
   /* ***********************************************************************************************
-  * Override methods
+  * Lifecycle methods
   * */
 
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -31,7 +31,7 @@ public abstract class BaseActivity extends AppCompatActivity {
   }
 
   /*
-   * END of Override methods
+   * END of Lifecycle methods
    ************************************************************************************************/
 
   /* ***********************************************************************************************

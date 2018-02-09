@@ -7,16 +7,20 @@ import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
+import com.dev.sdv.radiostreamingdemoapp.helper.BroadcastHelper;
+import com.dev.sdv.radiostreamingdemoapp.helper.Logger;
 import com.dev.sdv.radiostreamingdemoapp.media.MediaPlayerState;
+import com.dev.sdv.radiostreamingdemoapp.media.TrackStatus;
 import com.dev.sdv.radiostreamingdemoapp.media.listeners.ProgressUpdateListener;
 import com.dev.sdv.radiostreamingdemoapp.media.player.MediaPlayer;
 import com.dev.sdv.radiostreamingdemoapp.media.player.TrackMediaPlayer;
 import com.dev.sdv.radiostreamingdemoapp.model.Playlist;
 import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
+import com.dev.sdv.radiostreamingdemoapp.model.TrackModel;
 import com.dev.sdv.radiostreamingdemoapp.utils.Const;
 
 public class MediaService extends Service implements AudioManager.OnAudioFocusChangeListener,
@@ -24,26 +28,27 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
   public static final String TAG = MediaService.class.getSimpleName();
 
-  public static final String PACKAGE_NAME = "com.dev.sdv.radiostreamingdemoapp.";
+  private static final int MS_TO_REVERSE_ON_PAUSE   = 0;
 
-  public static final String ACTION_PLAY_TRACK = PACKAGE_NAME + "playNew";
-  public static final String ACTION_RESUME_PLAYBACK = PACKAGE_NAME + "play";
-  public static final String ACTION_PAUSE = PACKAGE_NAME + "pause";
-  public static final String ACTION_PLAY_PLAYLIST = PACKAGE_NAME + "playPlaylist";
-  public static final String ACTION_SEEK_TO = PACKAGE_NAME + "seekTo";
-  public static final String ACTION_STOP_SERVICE = PACKAGE_NAME + "stopService";
+  public static final String ACTION_PLAY_TRACK      = "com.dev.sdv.radiostreamingdemoapp.playNew";
+  public static final String ACTION_RESUME_PLAYBACK = "com.dev.sdv.radiostreamingdemoapp.play";
+  public static final String ACTION_PAUSE           = "com.dev.sdv.radiostreamingdemoapp.pause";
+  public static final String ACTION_PLAY_PLAYLIST   = "com.dev.sdv.radiostreamingdemoapp.playPlaylist";
+  public static final String ACTION_SEEK_TO         = "com.dev.sdv.radiostreamingdemoapp.seekTo";
+  public static final String ACTION_STOP_SERVICE    = "com.dev.sdv.radiostreamingdemoapp.stopService";
 
   public static final String PARAM_TRACK_ID = "trackId";
 
-  private AudioManager audioManager;
+  private AudioManager  audioManager;
   private PlaybackState playbackState;
-  private MediaSession mediaSession;
-  private MediaPlayer mediaPlayer;
-  private Track currentTrack;
+  private MediaSession  mediaSession;
+  private MediaPlayer   mediaPlayer;
+  private Track         currentTrack;
 
-  private int mediaPlayerState;
+  private int           mediaPlayerState;
+  private boolean       serviceBound;
 
-  private IBinder mediaServiceBinder = new MediaServiceBinder();
+  private IBinder       mediaServiceBinder = new MediaServiceBinder();
 
   /* ***********************************************************************************************
    * static
@@ -70,7 +75,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "in onCreate");
+    Logger.d(TAG, "in onCreate");
     audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
     mediaPlayerState = MediaPlayerState.STATE_IDLE;
@@ -100,7 +105,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
    * */
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Log.d(TAG, "Media service started");
+    Logger.d(TAG, "Media service started");
 
     handleIntent(intent);
 
@@ -108,13 +113,23 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   }
 
   @Nullable @Override public IBinder onBind(Intent intent) {
+    serviceBound = true;
     return mediaServiceBinder;
     //return null;
   }
 
+  @Override public boolean onUnbind(Intent intent) {
+
+    if (mediaPlayerState == MediaPlayerState.STATE_IDLE && !(mediaPlayer instanceof TrackMediaPlayer)) {
+      stopSelf();
+    }
+    serviceBound = false;
+    return super.onUnbind(intent);
+  }
+
   @Override
   public void onDestroy() {
-    Log.d(TAG, "Media service destroyed");
+    Logger.d(TAG, "Media service destroyed");
     destroyMediaPlayer();
     super.onDestroy();
   }
@@ -145,6 +160,14 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
         pause();
         break;
       }
+      case ACTION_STOP_SERVICE:{
+        endPlayback(true);
+
+        if (!serviceBound) {
+          stopSelf();
+        }
+        break;
+      }
       // TODO: add other actions
     }
   }
@@ -162,25 +185,128 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   /*
   * END of other methods
   * ***********************************************************************************************/
+  private void updateTrack(int state){
+    Logger.d(TAG, "Updating episode, state", state);
+
+    if (mediaPlayer == null || currentTrack == null || currentTrack.getId() == -1) {
+      return;
+    }
+
+    switch (state) {
+      case MediaPlayerState.STATE_PLAYING:
+        // mark episode as playing in DB
+        currentTrack.setStatus(TrackStatus.IN_PROGRESS);
+        break;
+      case MediaPlayerState.STATE_PAUSED:
+      case MediaPlayerState.STATE_IDLE:
+        currentTrack.setStatus(TrackStatus.PLAYED);
+        currentTrack.setProgress(mediaPlayer.getCurrentPosition() - MS_TO_REVERSE_ON_PAUSE);
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Incorrect state for showing play pause notification");
+    }
+    /*AppPrefHelper appPrefHelper = AppPrefHelper.getInstance(this);
+    appPrefHelper.setLastPlayedEpisodeId(mCurrentEpisode.getId());*/
+
+    Bundle params = new Bundle();
+    params.putLong(TrackModel.PARAM_TRACK_PROGRESS, currentTrack.getProgress());
+    params.putInt(TrackModel.PARAM_TRACK_STATUS, currentTrack.getStatus());
+    //TrackModel.updateEpisodeAsync(this, mCurrentEpisode.getId(), params);
+  }
+  /* ***********************************************************************************************
+  * Track Updates
+  * */
+
+  /*
+   * END of Track Updates
+   ************************************************************************************************/
 
   /* ***********************************************************************************************
   *  listeners
   * */
 
-  @Override public void onAudioFocusChange(int i) {
-    Log.d(TAG, String.format("onAudioFocusChange", i));
-    // TODO:
+  @Override public void onAudioFocusChange(int focusChange) {
+    Logger.d(TAG, "onAudioFocusChange", focusChange);
+    //Timber.d("AudioFocusChange, result code: %d", focusChange);
+    /*boolean pauseOnNotification = UserPrefHelper.get(this).getBoolean(
+        R.string.pref_key_pause_playback_during_notification);*/
+
+    switch (focusChange) {
+      case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+
+        /*if (pauseOnNotification) {
+          // record the playing before focus change value
+          mPlayingBeforeFocusChange = getPlaybackState() == MediaPlayerState.STATE_PLAYING;
+          pause();
+        } else {
+          mStreamVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+          mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+              (int) (mStreamVolume * AUDIO_DUCK), 0);
+        }
+        break;
+      case AudioManager.AUDIOFOCUS_LOSS:
+      case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+        // record the playing before focus change value
+        mPlayingBeforeFocusChange = mMediaPlayerState == MediaPlayerState.STATE_PLAYING;
+        pause();
+        break;
+      case AudioManager.AUDIOFOCUS_GAIN:
+
+        if (mStreamVolume > -1) {
+          mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mStreamVolume, 0);
+          mStreamVolume = -1;
+        }
+
+        // gained focus, start playback if we were playing before the focus change
+        if (mPlayingBeforeFocusChange && pauseOnNotification) {
+          mPlayingBeforeFocusChange = false;
+          play(null, true);
+        }
+        break;*/
+    }
   }
 
+  /**
+   * Media Player interface callbacks
+   * */
   @Override public void onProgressUpdate(long progress, long bufferedProgress, long duration) {
-    Log.d(TAG, String.format("onProgressUpdate: progress %d, bufferedProgress %d, duration %d",
+    Logger.d(TAG, String.format("onProgressUpdate: progress %d, bufferedProgress %d, duration %d",
         progress, bufferedProgress, duration));
-    // TODO:
+    //BroadcastHelper.broadcastProgressUpdate(this, progress, bufferedProgress, left);
   }
 
   @Override public void onStateChanged(int state) {
-    Log.d(TAG, String.format("onStateChanged: ", state));
+    Logger.d(TAG, String.format("onStateChanged: ", state));
     mediaPlayerState = state;
+    switch (state) {
+      case MediaPlayerState.STATE_CONNECTING:
+        break;
+      case MediaPlayerState.STATE_ENDED:
+        /*endUpdateTask();
+        endPlayback(true);
+        finishEpisode();
+        playNextEpisode();*/
+        break;
+      case MediaPlayerState.STATE_IDLE:
+        /*updateEpisode(state);
+        endUpdateTask();*/
+        break;
+      case MediaPlayerState.STATE_PLAYING:
+        updateTrack(state);
+        //startNotificationUpdate();
+        //startUpdateTask();
+        break;
+      case MediaPlayerState.STATE_PAUSED:
+        /*endUpdateTask();
+        updateEpisode(state);
+        startNotificationUpdate();*/
+        break;
+    }
+    //updateWidget();
+    //String serverId = currentTrack != null ? currentTrack.getGeneratedId() : "";
+    String trackId = currentTrack != null ? String.valueOf(currentTrack.getId()) : "";
+    BroadcastHelper.broadcastPlayerStateChange(this, mediaPlayerState, trackId);
   }
 
   /*
@@ -206,9 +332,9 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
       // TODO: get track by track id
       podcastEpisode = new PodcastEpisode.Builder()
           .id(1)
-          .title(Const.PodcastEpisode.DEFAULT_PODCAST_TITLE)
-          .subtitle(Const.PodcastEpisode.DEFAULT_PODCAST_SUBTITLE)
-          .url(Const.PodcastEpisode.DEFAULT_PODCAST_URL)
+          .title(Const.Track.DEBUG_PODCAST_TITLE)
+          .subtitle(Const.Track.DEBUG_PODCAST_SUBTITLE)
+          .url(Const.Track.DEBUG_PODCAST_URL)
           .build();
 
       Playlist playlist = new Playlist();
@@ -228,7 +354,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
    *
    * @param track to play
    */
-  private void play(Track track, boolean playImmediately) {
+  private void play(com.dev.sdv.radiostreamingdemoapp.model.Track track, boolean playImmediately) {
     if (mediaPlayer == null) {
       mediaPlayer = new TrackMediaPlayer(this, this, this);
     }
@@ -247,7 +373,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
           resumePlayback();
         } else {
           //Timber.w("Player is playing, episode cannot be null");
-          Log.w(TAG, "Player is playing, episode cannot be null");
+          Logger.w(TAG, "Player is playing, episode cannot be null");
         }
         break;
       }
@@ -266,10 +392,22 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
         break;
       default:
         //Timber.w("Trying to pause an track, but player is in state: %s", playbackState);
-        Log.w(TAG,
+        Logger.w(TAG,
             String.format("Trying to pause an track, but player is in state: %s", playbackState));
         break;
     }
+  }
+
+  private void endPlayback(boolean cancelNotification) {
+    updateTrack(MediaPlayerState.STATE_IDLE);
+    // TODO: unregisterReceivers headset receiver;
+
+    /*if (cancelNotification) {
+      mediaNotificationManager.stopNotification();
+    }*/
+    audioManager.abandonAudioFocus(this);
+    stopPlayback();
+    //releaseWifiLock();
   }
 
   /*
@@ -279,7 +417,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   /* ***********************************************************************************************
    * Media Player controls
    */
-  private void startPlayback(Track track, boolean playImmediately) {
+  private void startPlayback(com.dev.sdv.radiostreamingdemoapp.model.Track track, boolean playImmediately) {
     // request audio focus
     int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
         AudioManager.AUDIOFOCUS_GAIN);
@@ -298,7 +436,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
       mediaPlayer.setPlaybackSpeed(-1.0f);
     } else {
       //Timber.d("Audiofocus not granted, result code: %d", result);
-      Log.d(TAG, String.format("Audiofocus not granted, result code: %d", result));
+      Logger.d(TAG, String.format("Audiofocus not granted, result code: %d", result));
     }
   }
 
@@ -310,6 +448,10 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
   private void resumePlayback() {
     mediaPlayer.resumePlayback();
+  }
+
+  private void stopPlayback(){
+    mediaPlayer.stopPlayback();
   }
 
   /*

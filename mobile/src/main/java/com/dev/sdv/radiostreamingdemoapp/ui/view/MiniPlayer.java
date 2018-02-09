@@ -1,14 +1,11 @@
 package com.dev.sdv.radiostreamingdemoapp.ui.view;
 
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import com.dev.sdv.radiostreamingdemoapp.R;
-import com.dev.sdv.radiostreamingdemoapp.helper.PlaybackButtonHelper;
-import com.dev.sdv.radiostreamingdemoapp.media.listeners.ControlListener;
-import com.dev.sdv.radiostreamingdemoapp.model.PodcastEpisode;
+import com.dev.sdv.radiostreamingdemoapp.helper.Logger;
+import com.dev.sdv.radiostreamingdemoapp.media.listeners.PlayerVisibilityListener;
 import com.dev.sdv.radiostreamingdemoapp.model.Track;
 import com.dev.sdv.radiostreamingdemoapp.ui.activity.MainActivity;
 import java.lang.ref.WeakReference;
@@ -21,7 +18,7 @@ public class MiniPlayer implements View.OnClickListener {
   public static final String TAG = MiniPlayer.class.getSimpleName();
 
   private final WeakReference<MainActivity> activity;
-  private final WeakReference<ControlListener> listener;
+  private final WeakReference<PlayerVisibilityListener> listener;
 
   private View miniPlayer;
   private View rlControlPlay;
@@ -35,7 +32,7 @@ public class MiniPlayer implements View.OnClickListener {
 
   private Track track;
 
-  public MiniPlayer(MainActivity activity, ControlListener listener){
+  public MiniPlayer(MainActivity activity, PlayerVisibilityListener listener){
     this.activity = new WeakReference<>(activity);
     this.listener = new WeakReference<>(listener);
     initMiniPlayer();
@@ -89,27 +86,28 @@ public class MiniPlayer implements View.OnClickListener {
 
     switch (v.getId()){
       case R.id.rl_mini_player_control_play:
-        Log.d(TAG, "pressed play");
+        Logger.d(TAG, "pressed play");
         activity.onPlayTrack();
-        showPauseButton();
+        //showPauseButton();
         break;
       case R.id.rl_mini_player_control_pause:
-        Log.d(TAG, "pressed pause");
+        Logger.d(TAG, "pressed pause");
         activity.onPauseTrack();
         showPlayButton();
         break;
       case R.id.rl_mini_player_control_stop:
-        Log.d(TAG, "pressed stop");
+        Logger.d(TAG, "pressed stop");
+        activity.onStopTrack();
         showPlayButton();
         break;
       case R.id.rl_mini_player_control_fast_forward:
-        Log.d(TAG, "pressed  fast forward");
+        Logger.d(TAG, "pressed  fast forward");
         break;
       case R.id.rl_mini_player_control_fast_rewind:
-        Log.d(TAG, "pressed  fast rewind");
+        Logger.d(TAG, "pressed  fast rewind");
         break;
       default:
-        Log.d(TAG, "unknown button pressed");
+        Logger.d(TAG, "unknown button pressed");
     }
   }
   /*
@@ -133,13 +131,13 @@ public class MiniPlayer implements View.OnClickListener {
 
   // TODO: add logo and favorites
 
-  private void showPauseButton(){
+  public void showPauseButton(){
     rlControlPlay.setVisibility(View.GONE);
     rlControlPause.setVisibility(View.VISIBLE);
     miniPlayer.invalidate();
   }
 
-  private void showPlayButton(){
+  public void showPlayButton(){
     rlControlPause.setVisibility(View.GONE);
     rlControlPlay.setVisibility(View.VISIBLE);
     miniPlayer.invalidate();

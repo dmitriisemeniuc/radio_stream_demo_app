@@ -25,6 +25,12 @@
 
     <service android:name=".media.service.MediaService"/>
 
+    <receiver android:name="com.dev.sdv.radiostreamingdemoapp.broadcast.P" >
+      <intent-filter>
+        <action android:name="com.hmkcode.android.USER_ACTION" />
+      </intent-filter>
+    </receiver>
+
   </application>
 
 </manifest>

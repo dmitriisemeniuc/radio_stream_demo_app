@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
 import com.dev.sdv.radiostreamingdemoapp.R;
+import com.dev.sdv.radiostreamingdemoapp.helper.Logger;
 import com.dev.sdv.radiostreamingdemoapp.media.AudioExtractorsFactory;
 import com.dev.sdv.radiostreamingdemoapp.media.MediaPlayerState;
 import com.dev.sdv.radiostreamingdemoapp.media.listeners.ProgressUpdateListener;
@@ -160,9 +161,8 @@ public class TrackMediaPlayer extends MediaPlayer implements ProgressUpdateListe
         break;
     }
     mediaPlayerListener.onStateChanged(mediaPlayerState);
-    Log.d(TAG, String.format("ExoPlayer state changed: %s, Play When Ready: %s",
-        playbackStateStr,
-        String.valueOf(playWhenReady)));
+    Logger.d(TAG, "ExoPlayer state changed", playbackStateStr);
+    Logger.d(TAG, "Play When Ready", String.valueOf(playWhenReady));
   }
 
   @Override public void onTimelineChanged(Timeline timeline, Object manifest) {
@@ -170,7 +170,7 @@ public class TrackMediaPlayer extends MediaPlayer implements ProgressUpdateListe
   }
 
   @Override public void onPlayerError(ExoPlaybackException error) {
-    Log.w(TAG, "Player error encountered", error);
+    Logger.w(TAG, "Player error encountered", error);
     stopPlayback();
   }
 
@@ -190,7 +190,7 @@ public class TrackMediaPlayer extends MediaPlayer implements ProgressUpdateListe
     isStreaming = true;
 
     if (uri != null) {
-      Log.d(TAG, "Playing from URI " + uri);
+      Logger.d(TAG, "Playing from URI " + uri);
       return new ExtractorMediaSource(uri, dataSourceFactory, new AudioExtractorsFactory(),
           handler, null);
     }

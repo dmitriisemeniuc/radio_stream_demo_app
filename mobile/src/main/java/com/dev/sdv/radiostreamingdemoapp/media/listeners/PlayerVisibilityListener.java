@@ -1,6 +1,6 @@
 package com.dev.sdv.radiostreamingdemoapp.media.listeners;
 
-public interface ControlListener{
+public interface PlayerVisibilityListener {
   boolean onShow();
   boolean onHide();
 }

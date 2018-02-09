@@ -2,9 +2,17 @@ package com.dev.sdv.radiostreamingdemoapp.model;
 
 public abstract class Track {
 
-  protected int id;
-  protected String title;
-  protected String url;
+  protected int        id;
+  protected String     title;
+  protected String     url;
+
+  public abstract void setStatus(int status);
+
+  public abstract int getStatus();
+
+  public abstract void setProgress(long progress);
+
+  public abstract long getProgress();
 
   public int getId() {
     return id;
