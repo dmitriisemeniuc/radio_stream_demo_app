@@ -31,6 +31,7 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   public static final String TAG = MediaService.class.getSimpleName();
 
   private static final int MS_TO_REVERSE_ON_PAUSE   = 0;
+  private static final float AUDIO_DUCK             = 0.8f;
 
   public static final String ACTION_PLAY_TRACK      = "com.dev.sdv.radiostreamingdemoapp.playNew";
   public static final String ACTION_RESUME_PLAYBACK = "com.dev.sdv.radiostreamingdemoapp.play";
@@ -48,7 +49,9 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
   private Track         currentTrack;
 
   private int           mediaPlayerState;
+  private int           streamVolume = -1;
   private boolean       serviceBound;
+  private boolean       playingBeforeFocusChange;
 
   private IBinder       mediaServiceBinder = new MediaServiceBinder();
 
@@ -251,31 +254,32 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
           // record the playing before focus change value
           mPlayingBeforeFocusChange = getPlaybackState() == MediaPlayerState.STATE_PLAYING;
           pause();
-        } else {
-          mStreamVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-          mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-              (int) (mStreamVolume * AUDIO_DUCK), 0);
-        }
+        } else {*/
+          streamVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+          audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+              (int) (streamVolume * AUDIO_DUCK), 0);
+        //}
         break;
       case AudioManager.AUDIOFOCUS_LOSS:
       case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
         // record the playing before focus change value
-        mPlayingBeforeFocusChange = mMediaPlayerState == MediaPlayerState.STATE_PLAYING;
+        playingBeforeFocusChange = mediaPlayerState == MediaPlayerState.STATE_PLAYING;
         pause();
         break;
       case AudioManager.AUDIOFOCUS_GAIN:
 
-        if (mStreamVolume > -1) {
-          mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mStreamVolume, 0);
-          mStreamVolume = -1;
+        if (streamVolume > -1) {
+          audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, streamVolume, 0);
+          streamVolume = -1;
         }
 
         // gained focus, start playback if we were playing before the focus change
-        if (mPlayingBeforeFocusChange && pauseOnNotification) {
-          mPlayingBeforeFocusChange = false;
+        //if (playingBeforeFocusChange && pauseOnNotification) {
+        if (playingBeforeFocusChange) {
+          playingBeforeFocusChange = false;
           play(null, true);
         }
-        break;*/
+        break;
     }
   }
 
