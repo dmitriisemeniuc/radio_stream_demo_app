@@ -93,12 +93,12 @@ public class MiniPlayer implements View.OnClickListener {
       case R.id.rl_mini_player_control_pause:
         Logger.d(TAG, "pressed pause");
         activity.onPauseTrack();
-        showPlayButton();
+        //showPlayButton();
         break;
       case R.id.rl_mini_player_control_stop:
         Logger.d(TAG, "pressed stop");
         activity.onStopTrack();
-        showPlayButton();
+        //showPlayButton();
         break;
       case R.id.rl_mini_player_control_fast_forward:
         Logger.d(TAG, "pressed  fast forward");
@@ -134,13 +134,13 @@ public class MiniPlayer implements View.OnClickListener {
   public void showPauseButton(){
     rlControlPlay.setVisibility(View.GONE);
     rlControlPause.setVisibility(View.VISIBLE);
-    miniPlayer.invalidate();
+    //miniPlayer.invalidate();
   }
 
   public void showPlayButton(){
     rlControlPause.setVisibility(View.GONE);
     rlControlPlay.setVisibility(View.VISIBLE);
-    miniPlayer.invalidate();
+    //miniPlayer.invalidate();
   }
 
   public void clearMetadata(){

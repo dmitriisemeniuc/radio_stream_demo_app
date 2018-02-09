@@ -2,6 +2,7 @@ package com.dev.sdv.radiostreamingdemoapp.media;
 
 public class MediaPlayerState {
 
+  public static final int STATE_NONE = 0;
   public static final int STATE_IDLE = 1;
   public static final int STATE_CONNECTING = 2;
   public static final int STATE_PLAYING = 3;

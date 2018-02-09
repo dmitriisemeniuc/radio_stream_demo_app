@@ -11,12 +11,12 @@ public class Const {
     public static final String DEBUG_PODCAST_SUBTITLE = "Default podcast subtitle";
     
     // radio
-    public static final String DEBUG_RADIO_URL ="";
-    public static final String DEBUG_RADIO_TITLE = "";
-    
+    public static final String DEFAULT_RADIO_URL ="http://air.radiorecord.ru:8102/club_320";
+    public static final String DEFAULT_RADIO_TITLE = "Radio Record";
+
     // music
-    public static final String DEBUG_MUSIC_URL = "";
-    public static final String DEBUG_MUSIC_TITLE = "";
+    public static final String DEFAULT_MUSIC_URL = "";
+    public static final String DEFAULT_MUSIC_TITLE = "";
   }
 
 }

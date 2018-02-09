@@ -161,8 +161,8 @@ public class TrackMediaPlayer extends MediaPlayer implements ProgressUpdateListe
         break;
     }
     mediaPlayerListener.onStateChanged(mediaPlayerState);
-    Logger.d(TAG, "ExoPlayer state changed", playbackStateStr);
-    Logger.d(TAG, "Play When Ready", String.valueOf(playWhenReady));
+    Logger.d(TAG, "ExoPlayer state changed to:", playbackStateStr);
+    Logger.d(TAG, "Play When Ready:", String.valueOf(playWhenReady));
   }
 
   @Override public void onTimelineChanged(Timeline timeline, Object manifest) {
@@ -209,7 +209,7 @@ public class TrackMediaPlayer extends MediaPlayer implements ProgressUpdateListe
 
   private class ProgressUpdater implements Runnable {
 
-    private static final int TIME_UPDATE_MS = 16;
+    private static final int TIME_UPDATE_MS = 25;
 
     @Override
     public void run() {

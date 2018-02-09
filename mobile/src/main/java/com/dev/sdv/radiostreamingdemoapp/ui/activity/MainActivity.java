@@ -11,12 +11,14 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.View;
 import com.dev.sdv.radiostreamingdemoapp.R;
 import com.dev.sdv.radiostreamingdemoapp.broadcast.PlayerStateChangeReceiver;
 import com.dev.sdv.radiostreamingdemoapp.helper.BroadcastHelper;
 import com.dev.sdv.radiostreamingdemoapp.helper.Logger;
 import com.dev.sdv.radiostreamingdemoapp.media.MediaControllerCallback;
+import com.dev.sdv.radiostreamingdemoapp.media.MediaPlayerState;
 import com.dev.sdv.radiostreamingdemoapp.media.listeners.PlayerVisibilityListener;
 import com.dev.sdv.radiostreamingdemoapp.media.listeners.PlayerStateChangeListener;
 import com.dev.sdv.radiostreamingdemoapp.media.service.MediaService;
@@ -64,6 +66,8 @@ public class MainActivity extends BaseActivity implements PlayerVisibilityListen
     playerStateChangeReceiver = new PlayerStateChangeReceiver(this);
     LocalBroadcastManager.getInstance(this).registerReceiver(playerStateChangeReceiver,
         new IntentFilter(BroadcastHelper.INTENT_PLAYER_STATE_CHANGE));
+
+    if(mediaServiceBound) updateStateInGui(getState());
   }
 
   @Override protected void onPause() {
@@ -111,12 +115,10 @@ public class MainActivity extends BaseActivity implements PlayerVisibilityListen
   }
 
   @Override public int getState() {
-    int state = PlaybackState.STATE_NONE;
-
-    if (mediaController != null && mediaController.getPlaybackState() != null) {
-      state = mediaController.getPlaybackState().getState();
+    if(mediaServiceBound && mediaServiceBinder != null){
+      return mediaServiceBinder.getState();
     }
-    return state;
+    return MediaPlayerState.STATE_NONE;
   }
 
   /**
@@ -244,7 +246,11 @@ public class MainActivity extends BaseActivity implements PlayerVisibilityListen
       Bundle extras = new Bundle();
       extras.putInt(MediaService.PARAM_TRACK_ID, track.getId());
       //mediaController.getTransportControls().playFromSearch(null, extras);
-      MediaService.sendIntent(this, MediaService.ACTION_PLAY_TRACK, track.getId());
+      String action = MediaService.ACTION_PLAY_TRACK;
+      if(getState() == MediaPlayerState.STATE_PAUSED){
+        action = MediaService.ACTION_RESUME_PLAYBACK;
+      }
+      MediaService.sendIntent(this, action, track.getId());
     }
   }
 
@@ -266,6 +272,34 @@ public class MainActivity extends BaseActivity implements PlayerVisibilityListen
       //mediaController.getTransportControls().playFromSearch(null, extras);
       MediaService.sendIntent(this, MediaService.ACTION_STOP_SERVICE, track.getId());
     }
+  }
+
+  private void updateStateInGui(int state){
+    switch (state){
+      case MediaPlayerState.STATE_PLAYING:{
+        miniPlayer.showPauseButton();
+        Logger.d("PLAYING");
+        break;
+      }
+      case MediaPlayerState.STATE_PAUSED:{
+        miniPlayer.showPlayButton();
+        Logger.d("PAUSED");
+        break;
+      }
+      case MediaPlayerState.STATE_CONNECTING:{
+        Logger.d("CONNECTING");
+        break;
+      }
+      case MediaPlayerState.STATE_IDLE:{
+        miniPlayer.showPlayButton();
+        break;
+      }
+      case MediaPlayerState.STATE_ENDED:{
+        miniPlayer.showPlayButton();
+        break;
+      }
+    }
+    Logger.d("updateStateInGui:", "state", String.valueOf(state));
   }
   /*
   * END of Other methods
@@ -298,33 +332,13 @@ public class MainActivity extends BaseActivity implements PlayerVisibilityListen
     int state = intent.getIntExtra(BroadcastHelper.EXTRA_PLAYER_STATE, -1);
     String trackId = intent.getStringExtra(BroadcastHelper.EXTRA_TRACK_ID);
 
-    switch (state){
-      case PlaybackState.STATE_PLAYING:{
-        miniPlayer.showPauseButton();
-        break;
-      }
-      case PlaybackState.STATE_PAUSED:{
-        miniPlayer.showPlayButton();
-        break;
-      }
-      case PlaybackState.STATE_CONNECTING:{
-        Logger.d("CONNECTING");
-        break;
-      }
-      case PlaybackState.STATE_BUFFERING:{
-        Logger.d("BUFFERING");
-        break;
-      }
-      case PlaybackState.STATE_STOPPED:{
-        miniPlayer.showPlayButton();
-        break;
-      }
-    }
+    updateStateInGui(state);
 
     if (state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_PAUSED) {
       track = TrackModel.getTrackById(context, trackId);
       //adapter.notifyDataSetChanged();
     }
+    Logger.d("onReceive:", "state", String.valueOf(state));
   }
   /*
   * END of listeners

@@ -27,6 +27,19 @@ public class Logger {
     if(DEBUG) Log.d(tag, String.format("%s %s", msg, arg));
   }
 
+  public static void d(String tag, String msg, String... arg){
+    if(arg == null) return;
+
+    if(DEBUG){
+      StringBuilder stringBuilder = new StringBuilder(arg.length);
+      for(String ar : arg){
+        stringBuilder.append(" ");
+        stringBuilder.append(ar);
+      }
+      Log.d(tag, String.format("%s %s", msg, stringBuilder.toString()));
+    }
+  }
+
   public static void d(String tag, String msg, int arg){
     if(DEBUG) Log.d(tag, String.format("%s %d", msg, arg));
   }
