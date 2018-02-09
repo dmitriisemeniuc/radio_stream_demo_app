@@ -32,6 +32,12 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
   private static final int MS_TO_REVERSE_ON_PAUSE   = 0;
   private static final float AUDIO_DUCK             = 0.8f;
+  private static final long MEDIA_SESSION_ACTIONS =
+      PlaybackState.ACTION_FAST_FORWARD |
+          PlaybackState.ACTION_REWIND |
+          PlaybackState.ACTION_SEEK_TO |
+          PlaybackState.ACTION_SKIP_TO_NEXT |
+          PlaybackState.ACTION_SKIP_TO_PREVIOUS;
 
   public static final String ACTION_PLAY_TRACK      = "com.dev.sdv.radiostreamingdemoapp.playNew";
   public static final String ACTION_RESUME_PLAYBACK = "com.dev.sdv.radiostreamingdemoapp.play";
@@ -189,8 +195,15 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
 
   private void destroyMediaPlayer() {
 
-    // TODO: destroy media player
-
+    if (mediaPlayer == null) {
+      return;
+    }
+    //endUpdateTask();
+    endPlayback(true);
+    mediaPlayerState = MediaPlayerState.STATE_IDLE;
+    updatePlaybackState(mediaPlayerState);
+    mediaPlayer.tearDown();
+    mediaPlayer = null;
   }
 
   public MediaSession.Token getMediaSessionToken() {
@@ -323,6 +336,57 @@ public class MediaService extends Service implements AudioManager.OnAudioFocusCh
     //String serverId = currentTrack != null ? currentTrack.getGeneratedId() : "";
     String trackId = currentTrack != null ? String.valueOf(currentTrack.getId()) : "";
     BroadcastHelper.broadcastPlayerStateChange(this, mediaPlayerState, trackId);
+  }
+
+  private void updatePlaybackState(int stateVal) {
+    // get current position
+    long currentPosition = mediaPlayer.getCurrentPosition();
+    int playbackState;
+    long actions = MEDIA_SESSION_ACTIONS;
+
+    switch (stateVal) {
+      case MediaPlayerState.STATE_CONNECTING:
+        playbackState = PlaybackState.STATE_CONNECTING;
+        actions |= PlaybackState.ACTION_PAUSE;
+        break;
+      case MediaPlayerState.STATE_IDLE:
+        playbackState = PlaybackState.STATE_NONE;
+        actions |= PlaybackState.ACTION_PLAY;
+        break;
+      case MediaPlayerState.STATE_ENDED:
+        playbackState = PlaybackState.STATE_STOPPED;
+        actions |= PlaybackState.ACTION_PLAY;
+        break;
+      case MediaPlayerState.STATE_PAUSED:
+        playbackState = PlaybackState.STATE_PAUSED;
+        actions |= PlaybackState.ACTION_PLAY;
+        break;
+      case MediaPlayerState.STATE_PLAYING:
+        playbackState = PlaybackState.STATE_PLAYING;
+        actions |= PlaybackState.ACTION_PAUSE;
+        break;
+      default:
+        playbackState = PlaybackState.STATE_NONE;
+        actions |= PlaybackState.ACTION_PLAY;
+        break;
+    }
+
+    // create new playback state and add it to the media session
+    this.playbackState = new PlaybackState.Builder()
+        .setState(playbackState, currentPosition, 1.0f)
+        .setActions(actions)
+        .build();
+
+    // update current track
+    Bundle extras = new Bundle();
+
+    if (currentTrack != null) {
+      extras.putInt(PARAM_TRACK_ID, currentTrack.getId());
+    }
+
+    // add new properties to the media session
+    mediaSession.setPlaybackState(this.playbackState);
+    mediaSession.setExtras(extras);
   }
 
   /*
